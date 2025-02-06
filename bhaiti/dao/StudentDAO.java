@@ -3,15 +3,19 @@ package com.bhaiti.dao;
 import java.sql.DriverManager;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+
+import com.bhaiti.beans.Student;
 import com.bhaiti.beans.StudentRegistrationReply;
 
 public class StudentDAO {
 
-	StudentRegistrationReply student = new StudentRegistrationReply();
+	Student student = new Student();
 
-	void addNewstudent(StudentRegistrationReply student) {
+	public void addNewstudent(Student student) {
 
 		String studentName = student.getName();
 		int studentAge = student.getAge();
@@ -39,7 +43,7 @@ public class StudentDAO {
 
 	}
 
-	void updatestudent(StudentRegistrationReply student) {
+	public void updatestudent(Student student) {
 		String studentName = student.getName();
 		int age = student.getAge();
 		String regNo = student.getRegistrationNumber();
@@ -63,7 +67,7 @@ public class StudentDAO {
 
 	}
 
-	void removestudent(String regNo) {
+	public void removestudent(String regNo) {
 		String registrationNumber = regNo;
 		Connection con = StudentDAO.getConnection();
 		PreparedStatement ps = null;
@@ -82,8 +86,56 @@ public class StudentDAO {
 		}
 	}
 
-	StudentRegistrationReply findstudent(String registrationNumber) throws SQLException {
-		student = new StudentRegistrationReply();
+	private static Connection getConnection() {
+		// DataSource
+		String MYSQL_DRIVERNAME = "com.mysql.cj.jdbc.Driver";
+		String MYSQL_CONNECTION_URL = "jdbc:mysql://localhost:3306/student";
+
+		Connection con = null;
+		String strUserName = "root";
+		String strPassword = "root";
+		try {
+			java.util.Properties p = new java.util.Properties();
+			p.put("user", strUserName);
+			p.put("password", strPassword);
+			String driverName = MYSQL_DRIVERNAME;
+			Class.forName(driverName);
+			String url = MYSQL_CONNECTION_URL;
+			con = DriverManager.getConnection(url, p);
+
+		} catch (SQLException err) {
+			System.out.println("Sql exception err." + err.getMessage());
+		} catch (Exception err) {
+			System.out.println("Exception:  " + err.getMessage());
+		}
+		return con;
+
+	}
+
+	public List<Student> fetchall() {
+		List<Student> students = new ArrayList<>();
+		Connection con = StudentDAO.getConnection();
+		if (con == null) {
+			System.out.println("Connection is null");
+			return students;
+		}
+		String sql = "SELECT * FROM student";
+		try (PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+			while (rs.next()) {
+				Student student = new Student();
+				student.setName(rs.getString("name"));
+				student.setAge(rs.getInt("age"));
+				student.setRegistrationNumber(rs.getString("registrationNumber"));
+				students.add(student);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return students;
+	}
+
+	public Student findstudentbyRegistrationNumber(String registrationNumber) {
+		student = new Student();
 		Connection con = StudentDAO.getConnection();
 		PreparedStatement ps = null;
 		String name = "";
@@ -111,32 +163,6 @@ public class StudentDAO {
 			e.printStackTrace();
 		}
 		return student;
-
-	}
-
-	private static Connection getConnection() {
-		// DataSource
-		String MYSQL_DRIVERNAME = "com.mysql.cj.jdbc.Driver";
-		String MYSQL_CONNECTION_URL = "jdbc:mysql://localhost:3306/student";
-
-		Connection con = null;
-		String strUserName = "root";
-		String strPassword = "root";
-		try {
-			java.util.Properties p = new java.util.Properties();
-			p.put("user", strUserName);
-			p.put("password", strPassword);
-			String driverName = MYSQL_DRIVERNAME;
-			Class.forName(driverName);
-			String url = MYSQL_CONNECTION_URL;
-			con = DriverManager.getConnection(url, p);
-
-		} catch (SQLException err) {
-			System.out.println("Sql exception err." + err.getMessage());
-		} catch (Exception err) {
-			System.out.println("Exception:  " + err.getMessage());
-		}
-		return con;
 
 	}
 
